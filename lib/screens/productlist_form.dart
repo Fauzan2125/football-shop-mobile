@@ -212,8 +212,8 @@ class _ProductFormPageState extends State<ProductFormPage> {
                         final response = await request.postJson(
                           "http://localhost:8000/create-flutter/",
                           jsonEncode({
-                            "title": _title,
-                            "content": _content,
+                            "name": _title,
+                            "description": _content,
                             "price": _price,
                             "thumbnail": _thumbnail,
                             "category": _category,
