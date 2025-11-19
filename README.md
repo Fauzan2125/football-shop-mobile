@@ -43,3 +43,38 @@ Dalam konteks desain antarmuka, penggunaan layout widget seperti Padding, Single
 4. Penyesuaian Warna Tema untuk Identitas Visual
 
 Untuk menciptakan identitas visual yang konsisten sesuai dengan brand toko, aplikasi Football Shop memanfaatkan properti theme di dalam MaterialApp pada file main.dart. Secara spesifik, ThemeData digunakan untuk mendefinisikan skema warna global untuk seluruh aplikasi. Di dalam ThemeData, properti colorScheme diatur menggunakan ColorScheme.fromSwatch(primarySwatch: Colors.blue). Ini secara otomatis menetapkan Colors.blue sebagai warna primer utama yang akan digunakan oleh berbagai widget, seperti AppBar. Dengan mendefinisikan warna tema di satu lokasi pusat ini, setiap AppBar atau komponen lain yang menggunakan warna primer tema akan secara otomatis mengadopsi warna biru yang telah ditentukan. Hal ini memastikan konsistensi visual di semua halaman dan memperkuat identitas merek "Football Shop" tanpa perlu mengatur warna secara manual pada setiap widget satu per satu.
+
+# TUGAS 9
+
+1.  Model Data dan Konsekuensi Pemetaan Langsung
+
+Kita perlu secara eksplisit mendefinisikan **Model Dart** seperti `ProductEntry` (`lib/models/product_entry.dart`) saat mengambil atau mengirim data JSON karena model ini berfungsi sebagai **kontrak data** yang jelas, mendefinisikan secara pasti struktur, nama *field*, dan tipe data yang diharapkan dari *response* JSON dari Django. Konsekuensinya jika kita hanya memetakan langsung ke `Map<String, dynamic>` tanpa model adalah hilangnya perlindungan **null-safety** dan **validasi tipe** yang kuat, yang rentan menyebabkan *runtime error* (aplikasi *crash*) saat mencoba mengakses data dengan tipe yang salah atau nilai `null` di tahap eksekusi. Selain itu, **maintainability** kode akan sangat menurun karena setiap perubahan pada struktur API Django memerlukan perbaikan manual di puluhan lokasi yang menggunakan *Map* tersebut, bukan hanya di satu file model.
+
+---
+
+2. Fungsi Package `http` dan `CookieRequest`
+
+Dalam tugas ini, kita memanfaatkan dua *package* jaringan: **`http`** dan **`pbp_django_auth` (`CookieRequest`)**. *Package* **`http`** menyediakan fungsi dasar untuk semua *request* HTTP (GET, POST), menangani koneksi dan pertukaran data mentah. Sementara itu, **`CookieRequest`** adalah *wrapper* yang dibuat khusus di atas `http` untuk mengelola **sesi Django** secara otomatis. Peran utama `CookieRequest` adalah untuk menangkap dan menyimpan *session cookie* Django yang diterima setelah *login* berhasil, dan kemudian secara otomatis menyertakan *cookie* ini di *header* setiap *request* berikutnya yang bertujuan untuk mengakses fitur yang memerlukan otentikasi.
+
+3. Pentingnya Instance `CookieRequest` Dibagikan
+
+**Instance `CookieRequest` wajib dibagikan** ke semua komponen di aplikasi Flutter (melalui `Provider` di `lib/main.dart`) karena ia adalah satu-satunya entitas yang menyimpan **status sesi global** dan *cookie* otentikasi yang valid. Semua *widget* yang memerlukan akses terotentikasi—seperti memeriksa apakah pengguna sudah *login* (`request.loggedIn`), mengambil daftar produk pribadi (`/get-products/?filter=my`), atau memanggil fungsi *logout*—harus mengakses *instance* yang sama ini. Pembagian melalui `Provider` memastikan konsistensi dan integritas sesi di seluruh navigasi halaman.
+
+4. Konfigurasi Konektivitas dan Konsekuensinya
+
+Agar Flutter dapat berkomunikasi dengan Django, diperlukan konfigurasi konektivitas yang spesifik. Kita harus menambahkan **`10.0.2.2`** ke **`ALLOWED_HOSTS`** di Django karena ini adalah alamat khusus yang digunakan emulator Android untuk merujuk ke mesin *host* (komputer) tempat *server* Django berjalan. Kegagalan menambahkan alamat ini akan menyebabkan Django menolak permintaan dengan status **`400 Bad Request`** atau **`DisallowedHost`**. Selain itu, kita harus mengaktifkan **CORS** dan mengatur **`SameSite`** (*e.g.*, `CSRF_COOKIE_SAMESITE = 'None'`) pada *cookie* sesi di `settings.py`. Konfigurasi ini penting karena aplikasi *mobile* dianggap sebagai *origin* eksternal. Jika tidak dilakukan, *request* yang mengubah data akan diblokir oleh kebijakan keamanan lintas domain (CORS) atau *cookie* sesi tidak akan terkirim, menyebabkan pengguna selalu dianggap belum *login* (**`403 Forbidden`** atau **`401 Unauthorized`**). Terakhir, **izin akses internet** harus ditambahkan ke `AndroidManifest.xml` Android agar aplikasi diizinkan melakukan koneksi jaringan.
+
+5. Mekanisme Pengiriman Data (Input hingga Tampilan)
+
+Mekanisme ini dimulai dari sisi klien (Flutter). Pengguna memicu *event* (misalnya, membuka daftar produk). Flutter menggunakan `CookieRequest().get()` untuk memanggil *endpoint* JSON Django (`/get-products/`). Django memproses *request*, melakukan *query* ke *database* melalui model `Product`, dan mengembalikan data produk dalam format **`JsonResponse`**. Flutter menerima *response* JSON, yang kemudian diuraikan (parsed) dan dipetakan (mapped) menjadi daftar objek **`ProductEntry`** Dart. Akhirnya, *widget* **`FutureBuilder`** di `ProductEntryList` menerima objek-objek ini dan merender *widget* **`ProductEntryCard`** yang sesuai di antarmuka pengguna.
+
+6. Mekanisme Autentikasi (Login, Register, Logout)
+
+Mekanisme autentikasi berjalan sebagai berikut:
+a.  **Register:** Pengguna mengirim data dari `RegisterPage` ke *endpoint* registrasi Django. Django membuat objek `User` baru, dan jika sukses, merespons status `200`.
+b.  **Login:** Pengguna mengirim kredensial dari `LoginPage`. `request.login()` mengirim data ke *endpoint* *login* Django. Django memverifikasi dengan `authenticate`. Jika berhasil, `auth_login()` dipanggil untuk **menciptakan *session* di *server*** dan mengirimkan **`sessionid` *cookie*** ke *client*. `CookieRequest` menyimpannya, dan Flutter mengalihkan ke `MyHomePage` (menu).
+c.  **Logout:** Pengguna menekan kartu **Logout**. `request.logout()` dikirim, membawa *cookie* sesi. Django memanggil `auth_logout()` untuk **menghancurkan sesi di *server*** dan meminta Flutter menghapus *cookie* lokal, kemudian mengarahkan pengguna kembali ke `LoginPage`.
+
+7. Implementasi Checklist Secara Step-by-Step
+
+Implementasi dimulai dengan memastikan kerangka Django siap untuk API lintas platform (CORS, `ALLOWED_HOSTS`, *views* otentikasi dan produk yang mengembalikan JSON, model `Product` dengan `ForeignKey` ke `User`). Di sisi Flutter, langkah pertama adalah mendefinisikan **Model Dart** `ProductEntry` dan mengonfigurasi **`Provider`** untuk *instance* `CookieRequest`. Selanjutnya, diimplementasikan halaman **Register** dan **Login** yang menggunakan `postJson` dan `request.login` ke *endpoint* Django masing-masing. Setelah *login*, halaman **`ProductEntryList`** dibuat untuk mengambil data produk menggunakan `CookieRequest().get()` dalam `FutureBuilder` dan menerapkan **Filter "My Product"** dengan mengelola *state* `_filterType` yang mengontrol parameter *query* (`?filter=my`). Terakhir, desain keseluruhan (`lib/screens/menu.dart`, `lib/widgets/product_card.dart`, dll.) disempurnakan untuk selaras dengan tema website (kartu putih beraksen biru, *header* yang menonjol) dan menghilangkan elemen desain khas tutorial.

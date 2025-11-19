@@ -4,13 +4,16 @@ import 'package:football_shop/widgets/product_card.dart';
 
 class MyHomePage extends StatelessWidget {
   MyHomePage({super.key});
+
   final String nama = "Ahmad Fauzan Al Ayubi";
   final String npm = "2406344284";
   final String kelas = "C";
+
   final List<ItemHomepage> items = [
     ItemHomepage("All Products", Icons.shopping_cart, Colors.blue),
-    ItemHomepage("My Product", Icons.list_alt, Colors.green),
-    ItemHomepage("Add Product", Icons.add, Colors.red),
+    ItemHomepage("My Products", Icons.list_alt, Colors.blue),
+    ItemHomepage("Add Product", Icons.add, Colors.blue),
+    ItemHomepage("Logout", Icons.logout, Colors.red),
   ];
 
   @override
@@ -24,53 +27,96 @@ class MyHomePage extends StatelessWidget {
             fontWeight: FontWeight.bold,
           ),
         ),
-        backgroundColor: Theme.of(context).colorScheme.primary,
+        backgroundColor: Theme.of(context).colorScheme.primary, 
+        elevation: 0,
       ),
       drawer: const LeftDrawer(),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
+      body: SingleChildScrollView(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                InfoCard(title: 'NPM', content: npm),
-                InfoCard(title: 'Name', content: nama),
-                InfoCard(title: 'Class', content: kelas),
-              ],
-            ),
-            const SizedBox(height: 16.0),
-            Center(
-              child: Column(
-                children: [
-                  const Padding(
-                    padding: EdgeInsets.only(top: 16.0),
-                    child: Text(
-                      'Selamat datang di Football Shop',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18.0,
-                      ),
-                    ),
-                  ),
-                  GridView.count(
-                    primary: true,
-                    padding: const EdgeInsets.all(20),
-                    crossAxisSpacing: 10,
-                    mainAxisSpacing: 10,
-                    crossAxisCount: 3,
-                    shrinkWrap: true,
-                    children: items.map((ItemHomepage item) {
-                      return ItemCard(item);
-                    }).toList(),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary, 
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(30),
+                  bottomRight: Radius.circular(30),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withAlpha(25), 
+                    spreadRadius: 1,
+                    blurRadius: 10,
+                    offset: const Offset(0, 5),
                   ),
                 ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Selamat datang di Football Shop!',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildInfoColumn('NPM', npm),
+                      _buildInfoColumn('Name', nama),
+                      _buildInfoColumn('Class', kelas),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            
+            Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: GridView.count(
+                primary: false, 
+                crossAxisSpacing: 15, 
+                mainAxisSpacing: 15, 
+                crossAxisCount: 2,    
+                shrinkWrap: true,     
+                childAspectRatio: 1.2,
+                children: items.map((ItemHomepage item) {
+                  return ItemCard(item);
+                }).toList(),
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildInfoColumn(String title, String content) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: TextStyle(
+            color: Colors.white.withAlpha((255 * 0.7).round()),
+            fontSize: 12,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          content,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
     );
   }
 }

@@ -38,7 +38,7 @@ class _ProductFormPageState extends State<ProductFormPage> {
         title: const Center(
           child: Text('Form Tambah Produk'),
         ),
-        backgroundColor: Colors.indigo,
+        backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Colors.white,
       ),
       drawer: const LeftDrawer(),
@@ -201,13 +201,10 @@ class _ProductFormPageState extends State<ProductFormPage> {
                   child: ElevatedButton(
                     style: ButtonStyle(
                       backgroundColor:
-                          WidgetStateProperty.all(Colors.indigo),
+                          WidgetStateProperty.all(Theme.of(context).colorScheme.primary),
                     ),
                     onPressed: () async {
                       if (_formKey.currentState!.validate()) {
-                        // Replace the URL with your app's URL
-                        // To connect Android emulator with Django on localhost, use URL http://10.0.2.2/
-                        // If you using chrome,  use URL http://localhost:8000
                         
                         final response = await request.postJson(
                           "http://localhost:8000/create-flutter/",

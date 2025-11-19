@@ -14,35 +14,37 @@ class ItemCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final request = context.watch<CookieRequest>();
-    return Material(
-      color: Theme.of(context).colorScheme.secondary,
-      borderRadius: BorderRadius.circular(12),
+    final accentColor = item.color;
+
+    return Card(
+      elevation: 6,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: accentColor.withAlpha((0.5 * 255).round()), width: 1.5),
+      ),
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: () async{
+        onTap: () async {
           ScaffoldMessenger.of(context)
             ..hideCurrentSnackBar()
             ..showSnackBar(
                 SnackBar(content: Text("Kamu telah menekan tombol ${item.name}!")));
 
-          if (item.name == "Add Product") {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const ProductFormPage(),
-              ),
-            );
-          } else if (item.name == "See Football Product") {
+          if (item.name == "All Products" || item.name == "My Products") {
             Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (context) => const ProductEntryList(),
               ),
             );
+          } else if (item.name == "Add Product") {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const ProductFormPage(),
+              ),
+            );
           } else if (item.name == "Logout") {
-            // TODO: Replace the URL with your app's URL and don't forget to add a trailing slash (/)!
-            // To connect Android emulator with Django on localhost, use URL http://10.0.2.2/
-            // If you using chrome,  use URL http://localhost:8000
-            
             final response = await request.logout(
                 "http://localhost:8000/auth/logout/");
             String message = response["message"];
@@ -67,24 +69,27 @@ class ItemCard extends StatelessWidget {
           }
         },
         child: Container(
-          padding: const EdgeInsets.all(8),
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  item.icon,
-                  color: Colors.white,
-                  size: 30.0,
+          color: Colors.white,
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                item.icon,
+                color: accentColor,
+                size: 36.0,
+              ),
+              const SizedBox(height: 10), 
+              Text(
+                item.name,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: accentColor,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
                 ),
-                const Padding(padding: EdgeInsets.all(3)),
-                Text(
-                  item.name,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.white),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
